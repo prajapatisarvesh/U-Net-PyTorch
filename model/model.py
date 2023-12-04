@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from base.base_model import BaseModel
-
+import torchvision.transforms.functional as functional
 class DoubleConvolution(BaseModel):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -53,4 +53,23 @@ class UNet(BaseModel):
         '''
         To-Do
         '''
-        raise NotImplementedError
+        skip_connections = []
+        for down in self.downs:
+            x = down(x)
+            skip_connections.append(x)
+            x = self.pool(x)
+        
+        x = self.bottom(x)
+        skip_connections = skip_connections[::-1]
+        
+        for idx in range(0, len(self.ups), 2):
+            x = self.ups[idx](x)
+            skip_connection = skip_connections[idx//2]
+
+            if x.shape != skip_connection.shape:
+                x = functional.resize(x, size=skip_connection.shape[2:])
+
+            concat_skip = torch.cat((skip_connection, x), dim=1)
+            x = self.ups[idx+1](concat_skip)
+
+        return self.last(x)

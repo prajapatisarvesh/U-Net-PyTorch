@@ -1,2 +1,7 @@
-if __name__ == '__main__':
-    raise NotImplementedError
+import torch
+from model.model import UNet
+
+
+
+if __name__ == "__main__":
+    pass
